@@ -1,0 +1,45 @@
+/* How many users are we acquiring per day? */
+SELECT
+	DATE(createdAt) AS DAY,
+	COUNT(*)
+FROM users
+GROUP BY 1
+ORDER BY 1
+
+/* How many users are we acquiring per week? */
+SELECT distinct
+	DATE(createdAt) day,
+	COUNT(id) number_event
+FROM presentations
+WHERE onlineCount >= 4 AND onlineCountTime IS NOT NULL
+GROUP BY 1
+ORDER BY 1
+
+/* How many events are there per day? */
+SELECT distinct
+	DATE(createdAt) day,
+	COUNT(id) number_event
+FROM presentations
+WHERE onlineCount >= 4 AND onlineCountTime IS NOT NULL
+GROUP BY 1
+ORDER BY 1
+
+/* How many events are there per week? */
+SELECT DISTINCT
+	DATE_SUB(DATE(createdAt), INTERVAL (DAYOFWEEK(Date(createdAt)) - 2) DAY) AS week,
+COUNT(id) number_event
+FROM presentations
+WHERE 
+onlineCount >= 4 AND onlineCountTime IS NOT NULL
+GROUP BY 1
+ORDER BY 1
+
+/* How many events are there per month? */
+SELECT DISTINCT
+	MONTH(Date(createdAt)) month,
+	COUNT(id) number_event
+FROM presentations
+WHERE 
+onlineCount >= 4 AND onlineCountTime IS NOT NULL
+GROUP BY 1
+ORDER BY 1
