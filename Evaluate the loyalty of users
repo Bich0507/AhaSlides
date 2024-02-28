@@ -1,0 +1,59 @@
+/* Do all of these users actually use AhaSlides? */
+with t1 as (
+SELECT
+	u.id as user_id,
+	count(u.id) AS total_presentation,
+	SUM(CASE 
+		WHEN onlineCountTime IS NULL THEN 1 
+         		ELSE 0 END) AS presentation_not_run
+FROM users u
+Left join presentations p
+	on u.id = p.userid
+group by 1
+order by 3 desc)
+
+select
+	sum(case when total_presentation > 0 and presentation_not_run = 0 then 1 end) total_user_active,
+    (count(user_id) - sum(case when total_presentation > 0 and presentation_not_run = 0 then 1 end)) as total_user_no_active
+from t1
+
+/* Are they loyal to us? */
+WITH t1 AS (
+SELECT
+	userid,
+  	DATE(u.createdAt) AS created_date,
+	DATE(p.updatedAt) AS updated_date
+FROM users u
+LEFT JOIN presentations p
+	on u.id = p.userid
+GROUP BY 1, 2, 3),
+
+t2 AS (
+SELECT 
+	MAX(updated_date) as last_day_update
+FROM t1),
+
+t3 AS (
+SELECT 
+	userid,
+	count(id) AS number_presented
+FROM presentations
+WHERE onlineCountTime IS NOT NULL and onlineCount > 4
+GROUP BY 1),
+
+T4 AS (
+SELECT distinct
+	t1.userid as user_id,
+	CASE
+		WHEN DATEDIFF((select last_day_update from t2),t1.updated_date) <= 30 AND t3.number_presented >= 5 THEN 'loyal'
+      	  ELSE 'not_loyal'
+      	  END AS loyalty
+FROM t1
+left JOIN t3
+	on t1.userid = t3.userid
+ORDER BY 2)
+
+SELECT
+	sum(case when loyalty = 'loyal' then 1 END) as total_loyal,
+  	(count(user_id) - sum(case when loyalty = 'loyal' then 1 END)) as total_not_loyal
+FROM t4
