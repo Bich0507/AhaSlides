@@ -33,27 +33,17 @@ SELECT
 	MAX(updated_date) as last_day_update
 FROM t1),
 
-t3 AS (
-SELECT 
-	userid,
-	count(id) AS number_presented
-FROM presentations
-WHERE onlineCountTime IS NOT NULL and onlineCount > 4
-GROUP BY 1),
-
-T4 AS (
+T3 AS (
 SELECT distinct
 	t1.userid as user_id,
 	CASE
-		WHEN DATEDIFF((select last_day_update from t2),t1.updated_date) <= 30 AND t3.number_presented >= 5 THEN 'loyal'
+		WHEN DATEDIFF((select last_day_update from t2),t1.updated_date) <= 30 THEN 'loyal'
       	  ELSE 'not_loyal'
       	  END AS loyalty
 FROM t1
-left JOIN t3
-	on t1.userid = t3.userid
 ORDER BY 2)
 
 SELECT
 	sum(case when loyalty = 'loyal' then 1 END) as total_loyal,
   	(count(user_id) - sum(case when loyalty = 'loyal' then 1 END)) as total_not_loyal
-FROM t4
+FROM t3
